@@ -239,7 +239,7 @@ export default class AllPokemons extends Component<AllPokemonsProps, AllPokemons
         this.setState({ loading: true });
       }
 
-      let apiUrl = url || '/pokemon?limit=500';
+      let apiUrl = url || '/pokemon?limit=150';
       let pokemonList: PokemonListItem[] = [];
 
       // Se há filtro por tipo, buscar Pokémons desse tipo

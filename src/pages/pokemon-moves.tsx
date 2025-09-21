@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { PokedexBody, PokedexContainer, PokedexScreen, SectionHeader } from "../styles";
+import api from "../services/api";
 
 type RootStackParamList = {
   "pokemon-moves": { id: number; types: string[] };
@@ -20,6 +21,10 @@ type PokemonMove = {
     level_learned_at: number;
     version_group: { name: string };
   }>;
+};
+
+type PokemonResponse = {
+  moves: PokemonMove[];
 };
 
 const typeColors: Record<string, string> = {
@@ -58,10 +63,8 @@ const PokemonMoves: React.FC = () => {
     const fetchMoves = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-        if (!res.ok) throw new Error("Erro ao buscar Pokémon");
-        const data = await res.json();
-        setMoves(data.moves);
+        const response = await api.get<PokemonResponse>(`/pokemon/${id}`);
+        setMoves(response.data.moves);
       } catch (err: any) {
         setError(err.message || "Ocorreu um erro");
       } finally {
