@@ -162,6 +162,8 @@ interface MainState {
   sortOrder?: 'asc' | 'desc';
   showSuccessToast: boolean;
   successMessage: string;
+  showConfirmModal: boolean;
+  pokemonToRemove: PokemonData | null;
 }
 
 interface MainProps {
@@ -183,7 +185,9 @@ export default class Main extends Component<MainProps, MainState> {
     sortField: 'id',
     sortOrder: 'asc',
     showSuccessToast: false,
-    successMessage: ""
+    successMessage: "",
+    showConfirmModal: false,
+    pokemonToRemove: null
   };
 
   async componentDidMount(): Promise<void> {
@@ -332,6 +336,31 @@ export default class Main extends Component<MainProps, MainState> {
     });
   };
 
+  confirmRemovePokemon = (pokemon: PokemonData): void => {
+    this.setState({
+      showConfirmModal: true,
+      pokemonToRemove: pokemon
+    });
+  };
+
+  handleConfirmRemove = (): void => {
+    const { pokemonToRemove } = this.state;
+    if (pokemonToRemove) {
+      this.removePokemon(pokemonToRemove.id);
+      this.setState({
+        showConfirmModal: false,
+        pokemonToRemove: null
+      });
+    }
+  };
+
+  handleCancelRemove = (): void => {
+    this.setState({
+      showConfirmModal: false,
+      pokemonToRemove: null
+    });
+  };
+
   showSuccessNotification = (pokemonName: string): void => {
     const message = `${pokemonName.charAt(0).toUpperCase() + pokemonName.slice(1)} capturado com sucesso!`;
     this.setState({
@@ -353,6 +382,8 @@ export default class Main extends Component<MainProps, MainState> {
       showFilterModal,
       filterName,
       filterType,
+      showConfirmModal,
+      pokemonToRemove,
     } = this.state;
 
     const typeColors: { [key: string]: string } = {
@@ -404,6 +435,7 @@ export default class Main extends Component<MainProps, MainState> {
               <PokedexSubtitle onPress={() => {
                 this.props.navigation?.navigate("compare-pokemons");
               }} style={{ marginLeft: 10, marginTop: 10, color: "#fff" }}>Compare Pokémons</PokedexSubtitle>
+              
             </PokedexHeader>
             <Form>
               <Input
@@ -484,7 +516,7 @@ export default class Main extends Component<MainProps, MainState> {
                     </ActionButton>
                     <ActionButton
                       variant="danger"
-                      onPress={() => this.removePokemon(pokemon.id)}
+                      onPress={() => this.confirmRemovePokemon(pokemon)}
                     >
                       <ActionButtonText>Liberar</ActionButtonText>
                     </ActionButton>
@@ -559,6 +591,46 @@ export default class Main extends Component<MainProps, MainState> {
               <ApplyFiltersButton variant='secondary' onPress={this.clearFilters}>
                 <ApplyFiltersButtonText variant='secondary'>Limpar</ApplyFiltersButtonText>
               </ApplyFiltersButton>
+            </ModalContainer>
+          </ModalOverlay>
+        )}
+
+        {/* Modal de Confirmação para Liberar Pokémon */}
+        {showConfirmModal && pokemonToRemove && (
+          <ModalOverlay>
+            <ModalContainer>
+              <ModalHeader>
+                <ModalTitle>Confirmar Liberação</ModalTitle>
+                <CloseButton onPress={this.handleCancelRemove}>
+                  <CloseButtonText>Fechar</CloseButtonText>
+                </CloseButton>
+              </ModalHeader>
+
+              <div style={{ padding: 20, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#2c3e50' }}>
+                  Tem certeza que deseja liberar?
+                </div>
+                <div style={{ fontSize: 16, color: '#7f8c8d', marginBottom: 20 }}>
+                  {pokemonToRemove.name.charAt(0).toUpperCase() + pokemonToRemove.name.slice(1)} será removido da sua Pokédex
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
+                  <ActionButton
+                    variant="secondary"
+                    onPress={this.handleCancelRemove}
+                    style={{ flex: 1 }}
+                  >
+                    <ActionButtonText>Cancelar</ActionButtonText>
+                  </ActionButton>
+                  <ActionButton
+                    variant="danger"
+                    onPress={this.handleConfirmRemove}
+                    style={{ flex: 1 }}
+                  >
+                    <ActionButtonText>Liberar</ActionButtonText>
+                  </ActionButton>
+                </div>
+              </div>
             </ModalContainer>
           </ModalOverlay>
         )}

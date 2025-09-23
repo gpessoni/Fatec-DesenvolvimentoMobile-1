@@ -45,6 +45,16 @@ const Cadastro: React.FC = () => {
       users.push(newUser);
       await AsyncStorage.setItem("users", JSON.stringify(users));
 
+      // Salvar dados do usuário para o ranking
+      await AsyncStorage.setItem(`user:${email}`, JSON.stringify({
+        name,
+        email,
+        course,
+        createdAt: new Date().toISOString(),
+        pokemonCount: 0,
+        lastActivity: new Date().toISOString(),
+      }));
+
       Toast.show({ type: "success", text1: "Sucesso", text2: "Usuário cadastrado com sucesso!" });
       navigation.navigate("login");
     } catch (error) {
