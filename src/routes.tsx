@@ -12,6 +12,7 @@ import Main from "./pages/main";
 import Pokemon from "./pages/pokemon";
 import PokemonMoves from "./pages/pokemon-moves";
 import PokemonCompare from "./pages/compare-pokemons";
+import Ranking from "./pages/ranking";
 
 const Stack = createStackNavigator();
 
@@ -96,6 +97,11 @@ export default function Routes(): React.JSX.Element {
               headerTitleAlign: "center",
               headerStyle: { backgroundColor: "#e74c3c" },
               headerTitleStyle: { color: "#fff", fontWeight: "bold" },
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.navigate("ranking")} style={{ marginLeft: 15 }}>
+                  <Icon name="group" size={24} color="#fff" />
+                </TouchableOpacity>
+              ),
               headerRight: () => (
                 <TouchableOpacity onPress={() => openLogoutModal(navigation)} style={{ marginRight: 15 }}>
                   <Icon name="logout" size={24} color="#fff" />
@@ -113,6 +119,11 @@ export default function Routes(): React.JSX.Element {
               headerTintColor: "#fff",
               headerStyle: { backgroundColor: "#e74c3c" },
               headerTitleStyle: { color: "#fff", fontWeight: "bold" },
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.navigate("ranking")} style={{ marginLeft: 15 }}>
+                  <Icon name="group" size={24} color="#fff" />
+                </TouchableOpacity>
+              ),
               headerRight: () => (
                 <TouchableOpacity onPress={() => openLogoutModal(navigation)} style={{ marginRight: 15 }}>
                   <Icon name="logout" size={24} color="#fff" />
@@ -141,6 +152,11 @@ export default function Routes(): React.JSX.Element {
               headerTintColor: "#fff",
               headerStyle: { backgroundColor: "#e74c3c" },
               headerTitleStyle: { color: "#fff", fontWeight: "bold" },
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.navigate("ranking")} style={{ marginLeft: 15 }}>
+                  <Icon name="group" size={24} color="#fff" />
+                </TouchableOpacity>
+              ),
               headerRight: () => (
                 <TouchableOpacity onPress={() => openLogoutModal(navigation)} style={{ marginRight: 15 }}>
                   <Icon name="logout" size={24} color="#fff" />
@@ -154,6 +170,18 @@ export default function Routes(): React.JSX.Element {
             component={PokemonMoves}
             options={{
               title: "Movimentos",
+              headerTitleAlign: "center",
+              headerTintColor: "#fff",
+              headerStyle: { backgroundColor: "#e74c3c" },
+              headerTitleStyle: { color: "#fff", fontWeight: "bold" },
+            }}
+          />
+
+          <Stack.Screen
+            name="ranking"
+            component={Ranking}
+            options={{
+              title: "RANKING",
               headerTitleAlign: "center",
               headerTintColor: "#fff",
               headerStyle: { backgroundColor: "#e74c3c" },
