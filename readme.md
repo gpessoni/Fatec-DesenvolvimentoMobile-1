@@ -1,4 +1,4 @@
-# Pokedéx DSM
+# Pokedéx DSM - Gabriel Pessoni
 
 Aplicativo mobile desenvolvido com Expo (React Native + TypeScript) que permite pesquisar, capturar e gerenciar Pokémons utilizando a API pública PokeAPI.
 
