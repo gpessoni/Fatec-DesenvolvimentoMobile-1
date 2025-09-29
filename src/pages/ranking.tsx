@@ -35,6 +35,8 @@ const Ranking: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState<RankingUser | null>(null);
+    const [battleResult, setBattleResult] = useState<{ winner: string; reason: string } | null>(null);
+    const [battleLoading, setBattleLoading] = useState(false);
 
     useEffect(() => {
         const loadRanking = async () => {
@@ -94,6 +96,124 @@ const Ranking: React.FC = () => {
 
         loadRanking();
     }, []);
+
+
+    // --- BATTLE HELPERS ---
+    const typeChart: Record<string, string[]> = {
+        fire: ["grass", "ice", "bug", "steel"],
+        water: ["fire", "ground", "rock"],
+        grass: ["water", "ground", "rock"],
+        electric: ["water", "flying"],
+        ground: ["fire", "electric", "poison", "rock", "steel"],
+        rock: ["fire", "ice", "flying", "bug"],
+        fighting: ["normal", "rock", "steel", "ice", "dark"],
+        psychic: ["fighting", "poison"],
+        dark: ["psychic", "ghost"],
+        ghost: ["psychic", "ghost"],
+        ice: ["grass", "ground", "flying", "dragon"],
+        dragon: ["dragon"],
+        bug: ["grass", "psychic", "dark"],
+        steel: ["ice", "rock", "fairy"],
+        fairy: ["fighting", "dragon", "dark"],
+        poison: ["grass", "fairy"],
+        flying: ["grass", "fighting", "bug"],
+    };
+
+    const hasAdvantage = (attacker: any, defender: any): boolean => {
+        const attackerTypes: string[] = (attacker?.types || []).map((t: any) => t.name || t.type?.name).filter(Boolean);
+        const defenderTypes: string[] = (defender?.types || []).map((t: any) => t.name || t.type?.name).filter(Boolean);
+        for (const atk of attackerTypes) {
+            const strongAgainst = typeChart[atk];
+            if (!strongAgainst) continue;
+            for (const def of defenderTypes) {
+                if (strongAgainst.includes(def)) return true;
+            }
+        }
+        return false;
+    };
+
+    const sumTeamStats = (team: any[]): number => {
+        return (team || []).reduce((total, p) => {
+            const statsSum = (p?.stats || []).reduce((acc: number, s: any) => acc + (s?.base_stat || 0), 0);
+            return total + statsSum;
+        }, 0);
+    };
+
+    const countTeamAdvantages = (teamA: any[], teamB: any[]): number => {
+        let count = 0;
+        for (const a of teamA || []) {
+            for (const b of teamB || []) {
+                if (hasAdvantage(a, b)) {
+                    count += 1;
+                    break; // conta pelo menos uma vantagem por Pokémon
+                }
+            }
+        }
+        return count;
+    };
+
+    const handleBattle = async () => {
+        if (!selectedUser) return;
+        try {
+            setBattleLoading(true);
+            setBattleResult(null);
+
+            const currentUserStr = await AsyncStorage.getItem("currentUser");
+            if (!currentUserStr) {
+                setBattleResult({ winner: selectedUser.name, reason: "Você não está logado." });
+                return;
+            }
+            const currentUser = JSON.parse(currentUserStr);
+            const myKey = `pokemons:${currentUser.email}`;
+            const myPokemonsStr = await AsyncStorage.getItem(myKey);
+            const myPokemons = myPokemonsStr ? JSON.parse(myPokemonsStr) : [];
+
+            const opponentPokemons = selectedUser.pokemons || [];
+
+            if ((myPokemons?.length || 0) === 0 && (opponentPokemons?.length || 0) === 0) {
+                setBattleResult({ winner: "Empate", reason: "Nenhum dos dois tem Pokémons." });
+                return;
+            }
+            if ((myPokemons?.length || 0) === 0) {
+                setBattleResult({ winner: selectedUser.name, reason: "Você não possui Pokémons para batalhar." });
+                return;
+            }
+            if ((opponentPokemons?.length || 0) === 0) {
+                setBattleResult({ winner: "Você", reason: `${selectedUser.name} não possui Pokémons para batalhar.` });
+                return;
+            }
+
+            const myStats = sumTeamStats(myPokemons);
+            const oppStats = sumTeamStats(opponentPokemons);
+
+            const myAdv = countTeamAdvantages(myPokemons, opponentPokemons);
+            const oppAdv = countTeamAdvantages(opponentPokemons, myPokemons);
+
+            const ADVANTAGE_BONUS = 50; // peso da vantagem de tipos
+            const myScore = myStats + myAdv * ADVANTAGE_BONUS;
+            const oppScore = oppStats + oppAdv * ADVANTAGE_BONUS;
+
+            let winner = "Empate";
+            let reason = `Seus pontos: ${myScore} (stats ${myStats} + vantagens ${myAdv}). ` +
+                         `Pontos de ${selectedUser.name}: ${oppScore} (stats ${oppStats} + vantagens ${oppAdv}). `;
+
+            if (myScore > oppScore) {
+                winner = "Você";
+                reason += "Sua equipe é mais forte considerando stats e vantagens de tipos.";
+            } else if (oppScore > myScore) {
+                winner = selectedUser.name;
+                reason += "A equipe do oponente é mais forte considerando stats e vantagens de tipos.";
+            } else {
+                reason += "As equipes estão equilibradas.";
+            }
+
+            setBattleResult({ winner, reason });
+        } catch (e) {
+            setBattleResult({ winner: selectedUser?.name || "Oponente", reason: "Erro ao simular a batalha." });
+        } finally {
+            setBattleLoading(false);
+        }
+    };
 
 
     if (loading) {
@@ -174,6 +294,16 @@ const Ranking: React.FC = () => {
                                 <Text style={styles.emptyText}>Nenhum Pokémon capturado.</Text>
                             )}
                         </ScrollView>
+                        {battleResult && (
+                            <View style={styles.resultCard}>
+                                <Text style={styles.resultTitle}>Resultado da Batalha</Text>
+                                <Text style={styles.resultWinner}>Vencedor: {battleResult.winner}</Text>
+                                <Text style={styles.resultReason}>{battleResult.reason}</Text>
+                            </View>
+                        )}
+                        <Pressable style={[styles.battleButton, battleLoading && { opacity: 0.7 }]} onPress={handleBattle} disabled={battleLoading}>
+                            <Text style={styles.battleButtonText}>{battleLoading ? "Calculando..." : "Batalhar"}</Text>
+                        </Pressable>
                         <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
                             <Text style={styles.closeButtonText}>Fechar</Text>
                         </Pressable>
@@ -234,6 +364,23 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     closeButtonText: { color: "#fff", fontWeight: "bold" },
+    battleButton: {
+        marginTop: 12,
+        backgroundColor: "#e74c3c",
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+    battleButtonText: { color: "#fff", fontWeight: "bold" },
+    resultCard: {
+        backgroundColor: "#f8f8f8",
+        borderRadius: 10,
+        padding: 12,
+        marginTop: 10,
+    },
+    resultTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 6 },
+    resultWinner: { fontSize: 16, fontWeight: "600", marginBottom: 4 },
+    resultReason: { fontSize: 14, color: "#555" },
 });
 
 export default Ranking;
