@@ -132,7 +132,7 @@ const PokemonMoves: React.FC = () => {
                             Método: {capitalize(d.move_learn_method.name)}
                           </Text>
                           <Text style={styles.moveInfo}>
-                            Nível: {d.level_learned_at || "?"}
+                            Nível: {d.level_learned_at || "0"}
                           </Text>
                         </View>
                       ))}

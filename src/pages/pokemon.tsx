@@ -537,7 +537,7 @@ export default class Pokemon extends Component<PokemonProps, PokemonState> {
                                             <MoveCard key={index}>
                                                 <MoveName>{move.move.name.replace('-', ' ')}</MoveName>
                                                 <MoveLevel>
-                                                    Nível {move.version_group_details[0]?.level_learned_at || '?'}
+                                                    Nível {move.version_group_details[0]?.level_learned_at || '0'}
                                                 </MoveLevel>
                                             </MoveCard>
                                         ))}
